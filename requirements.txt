@@ -35,7 +35,7 @@ langchain-google-genai==2.1.10
 cryptography==45.0.5
 python-magic==0.4.27
 qdrant-client==1.9.1
-langchain-qdrant==1.1.0
+langchain-qdrant==0.2.1
 python-pptx==1.0.2
 xlrd==2.0.2
 pydantic==2.9.2
