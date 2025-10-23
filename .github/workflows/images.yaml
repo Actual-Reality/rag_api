@@ -1,4 +1,4 @@
-name: Docker Dev Images Build
+name: Docker Images Build
 
 on:
   workflow_dispatch:
@@ -19,10 +19,7 @@ jobs:
         include:
           - target: main
             file: Dockerfile
-            image_name: librechat-rag-api-dev
-          - target: lite
-            file: Dockerfile.lite
-            image_name: librechat-rag-api-dev-lite
+            image_name: librechat-rag-api
 
     steps:
       # Check out the repository

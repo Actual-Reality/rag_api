@@ -5,6 +5,7 @@ from langchain_core.embeddings import Embeddings
 from .async_pg_vector import AsyncPgVector
 from .atlas_mongo_vector import AtlasMongoVector
 from .extended_pg_vector import ExtendedPgVector
+from .qdrant_vector import QdrantVector
 
 
 def get_vector_store(
@@ -32,5 +33,12 @@ def get_vector_store(
         return AtlasMongoVector(
             collection=mong_collection, embedding=embeddings, index_name=search_index
         )
+    elif mode == "qdrant":
+        return QdrantVector(
+            url=connection_string,
+            api_key=None,  # or extract from config
+            collection_name=collection_name,
+            embeddings=embeddings,
+        )
     else:
-        raise ValueError("Invalid mode specified. Choose 'sync', 'async', or 'atlas-mongo'.")
+        raise ValueError("Invalid mode specified. Choose 'sync', 'async', 'atlas-mongo', or 'qdrant'.")

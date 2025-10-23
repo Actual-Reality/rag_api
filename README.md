@@ -127,6 +127,56 @@ The `ATLAS_MONGO_DB_URI` could be the same or different from what is used by Lib
 
 Follow one of the [four documented methods](https://www.mongodb.com/docs/atlas/atlas-vector-search/create-index/#procedure) to create the vector index.
 
+### Use Qdrant as Vector Database
+
+Instead of using pgvector or Atlas MongoDB, you can use [Qdrant](https://qdrant.tech/) as the vector database. To do so, set the following environment variables:
+
+```env
+VECTOR_DB_TYPE=qdrant
+QDRANT_URL=<qdrant-url>  # e.g., http://localhost:6333 or https://<your-qdrant-cloud-url>
+QDRANT_API_KEY=<your-api-key>  # Optional, for Qdrant Cloud with authentication
+COLLECTION_NAME=<vector collection>
+```
+
+For local development, you can run Qdrant using Docker:
+
+```bash
+docker run -p 6333:6333 -p 6334:6334 \
+    -v $(pwd)/qdrant_storage:/qdrant/storage:z \
+    qdrant/qdrant \
+    ./qdrant --uri 'http://0.0.0.0:6333'
+```
+
+For Qdrant Cloud, you can sign up at [Qdrant Cloud](https://cloud.qdrant.io/) and create a new cluster.
+
+When using Qdrant, you need to create a collection with the appropriate configuration. Here's an example configuration for a collection:
+
+```json
+{
+  "name": "your-collection-name",
+  "vectors": {
+    "size": 1536,
+    "distance": "Cosine"
+  },
+  "optimizers_config": {
+    "default_segment_number": 2
+  }
+}
+```
+
+You can create the collection using the Qdrant REST API or the Qdrant client:
+
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams, Distance
+
+client = QdrantClient(url="http://localhost:6333")
+
+client.create_collection(
+    collection_name="your-collection-name",
+    vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+)
+```
 
 ### Proxy Configuration
 

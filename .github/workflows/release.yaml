@@ -1,4 +1,4 @@
-name: Docker Dev Images Release
+name: Docker Images Release
 
 on:
   workflow_dispatch:
