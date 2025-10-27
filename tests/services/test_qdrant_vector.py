@@ -59,7 +59,7 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(result[0][1], 0.8)  # score
         mock_similarity_search.assert_called_once()
         
-    @patch('app.services.vector_store.qdrant_vector.QdrantClient')
+    @patch('qdrant_client.QdrantClient')
     def test_get_all_ids(self, mock_qdrant_client):
         """Test get_all_ids method."""
         # Mock the Qdrant client response
@@ -78,7 +78,7 @@ class TestQdrantVector(unittest.TestCase):
         self.assertIn("test_id_1", result)
         self.assertIn("test_id_2", result)
         
-    @patch('app.services.vector_store.qdrant_vector.QdrantClient')
+    @patch('qdrant_client.QdrantClient')
     def test_get_filtered_ids(self, mock_qdrant_client):
         """Test get_filtered_ids method."""
         # Mock the Qdrant client response
@@ -96,7 +96,7 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("filtered_id_1", result)
         
-    @patch('app.services.vector_store.qdrant_vector.QdrantClient')
+    @patch('qdrant_client.QdrantClient')
     def test_get_documents_by_ids(self, mock_qdrant_client):
         """Test get_documents_by_ids method."""
         # Mock the Qdrant client response
@@ -117,7 +117,7 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(result[0].page_content, "Test content")
         self.assertEqual(result[0].metadata["source"], "test")
         
-    @patch('app.services.vector_store.qdrant_vector.QdrantClient')
+    @patch('qdrant_client.QdrantClient')
     def test_delete(self, mock_qdrant_client):
         """Test delete method."""
         # Mock the Qdrant client

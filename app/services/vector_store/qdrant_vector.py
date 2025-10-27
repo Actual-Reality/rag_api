@@ -6,7 +6,7 @@ from langchain_qdrant import Qdrant
 
 
 class QdrantVector(Qdrant):
-    def __init__(self, url: str, api_key: Optional[str], collection_name: str, 
+    def __init__(self, url: str, api_key: Optional[str], collection_name: str,
                  embeddings: Embeddings):
         # Initialize Qdrant client and connection
         super().__init__(
@@ -15,6 +15,10 @@ class QdrantVector(Qdrant):
             collection_name=collection_name,
             embeddings=embeddings
         )
+        # Store attributes for use in methods that create their own QdrantClient
+        self.url = url
+        self.api_key = api_key
+        self.collection_name = collection_name
         
     def add_documents(self, docs: list[Document], ids: list[str]):
         # Add documents with custom IDs
