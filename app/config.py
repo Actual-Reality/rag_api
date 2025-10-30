@@ -29,6 +29,7 @@ class EmbeddingsProvider(Enum):
     BEDROCK = "bedrock"
     GOOGLE_GENAI = "google_genai"
     GOOGLE_VERTEXAI = "vertexai"
+    CUSTOM_HUGGINGFACE = "custom_huggingface"
 
 
 def get_env_variable(
@@ -190,6 +191,8 @@ RAG_AZURE_OPENAI_ENDPOINT = get_env_variable(
     "RAG_AZURE_OPENAI_ENDPOINT", AZURE_OPENAI_ENDPOINT
 ).rstrip("/")
 HF_TOKEN = get_env_variable("HF_TOKEN", "")
+CUSTOM_HF_API_TOKEN = get_env_variable("CUSTOM_HF_API_TOKEN", "")
+CUSTOM_HF_ENDPOINT = get_env_variable("CUSTOM_HF_ENDPOINT", "")
 OLLAMA_BASE_URL = get_env_variable("OLLAMA_BASE_URL", "http://ollama:11434")
 AWS_ACCESS_KEY_ID = get_env_variable("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = get_env_variable("AWS_SECRET_ACCESS_KEY", "")
@@ -270,6 +273,12 @@ def init_embeddings(provider, model):
             model_id=model,
             region_name=AWS_DEFAULT_REGION,
         )
+    elif provider == EmbeddingsProvider.CUSTOM_HUGGINGFACE:
+        from app.services.custom_hf_embeddings import CustomHuggingFaceEmbeddings
+        return CustomHuggingFaceEmbeddings(
+            endpoint_url=CUSTOM_HF_ENDPOINT,
+            api_token=CUSTOM_HF_API_TOKEN
+        )
     else:
         raise ValueError(f"Unsupported embeddings provider: {provider}")
 
@@ -305,6 +314,8 @@ elif EMBEDDINGS_PROVIDER == EmbeddingsProvider.BEDROCK:
         "EMBEDDINGS_MODEL", "amazon.titan-embed-text-v1"
     )
     AWS_DEFAULT_REGION = get_env_variable("AWS_DEFAULT_REGION", "us-east-1")
+elif EMBEDDINGS_PROVIDER == EmbeddingsProvider.CUSTOM_HUGGINGFACE:
+    EMBEDDINGS_MODEL = get_env_variable("EMBEDDINGS_MODEL", "custom")
 else:
     raise ValueError(f"Unsupported embeddings provider: {EMBEDDINGS_PROVIDER}")
 
