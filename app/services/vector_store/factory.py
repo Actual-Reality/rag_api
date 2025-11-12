@@ -34,9 +34,11 @@ def get_vector_store(
             collection=mong_collection, embedding=embeddings, index_name=search_index
         )
     elif mode == "qdrant":
+        # Import QDRANT_API_KEY from config
+        from app.config import QDRANT_API_KEY
         return QdrantVector(
             url=connection_string,
-            api_key=None,  # or extract from config
+            api_key=QDRANT_API_KEY,
             collection_name=collection_name,
             embeddings=embeddings,
         )

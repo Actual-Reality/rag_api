@@ -179,6 +179,7 @@ dependencies = [
     "yarl==1.22.0",
     "zstandard==0.23.0",
     "uvicorn>=0.38.0",
+    "asyncpg>=0.30.0",
 ]
 
 [build-system]

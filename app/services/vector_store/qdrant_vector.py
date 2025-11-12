@@ -18,14 +18,25 @@ class QdrantVector(Qdrant):
         logger.debug(f"QdrantVector.__init__ called with url={url}, api_key={api_key}, collection_name={collection_name}")
         
         # Create a QdrantClient instance
-        client = QdrantClient(url=url, api_key=api_key)
+        try:
+            client = QdrantClient(url=url, api_key=api_key)
+            logger.debug(f"QdrantClient created successfully with url={url}")
+        except Exception as e:
+            logger.error(f"Failed to create QdrantClient: {e}")
+            raise
         
         # Initialize Qdrant client and connection
-        super().__init__(
-            client=client,
-            collection_name=collection_name,
-            embeddings=embeddings
-        )
+        try:
+            super().__init__(
+                client=client,
+                collection_name=collection_name,
+                embeddings=embeddings
+            )
+            logger.debug("QdrantVector parent class initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize Qdrant parent class: {e}")
+            raise
+            
         # Store attributes for use in methods that create their own QdrantClient
         self.url = url
         self.api_key = api_key
@@ -84,55 +95,61 @@ class QdrantVector(Qdrant):
         # In Qdrant, we need to scroll through all points and extract file_id
         try:
             # Get all points from the collection
-            from qdrant_client import QdrantClient
-            from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+            from qdrant_client.http.models import Filter, FieldCondition, MatchAny
             
             # Create a client to access the collection directly
+            logger.debug(f"Creating QdrantClient for get_all_ids with url={self.url}")
             client = QdrantClient(url=self.url, api_key=self.api_key)
+            logger.debug("QdrantClient created successfully for get_all_ids")
             
             # Create a client to access the collection directly
-            # client = QdrantClient(url=self.url, api_key=self.api_key)
             
             # Scroll through all points to get unique file_ids
             file_ids = set()
             next_page_offset = None
             
             while True:
-                response = client.scroll(
-                    collection_name=self.collection_name,
-                    limit=100,
-                    offset=next_page_offset,
-                    with_payload=True
-                )
-                
-                # Extract file_id from each point's payload
-                for point in response[0]:
-                    if hasattr(point.payload, 'file_id'):
-                        file_ids.add(point.payload.file_id)
-                    elif isinstance(point.payload, dict) and 'file_id' in point.payload:
-                        file_ids.add(point.payload['file_id'])
-                
-                # Check if there are more points
-                next_page_offset = response[1]
-                if next_page_offset is None:
+                try:
+                    response = client.scroll(
+                        collection_name=self.collection_name,
+                        limit=100,
+                        offset=next_page_offset,
+                        with_payload=True
+                    )
+                    
+                    # Extract file_id from each point's payload
+                    for point in response[0]:
+                        if hasattr(point.payload, 'file_id'):
+                            file_ids.add(point.payload.file_id)
+                        elif isinstance(point.payload, dict) and 'file_id' in point.payload:
+                            file_ids.add(point.payload['file_id'])
+                    
+                    # Check if there are more points
+                    next_page_offset = response[1]
+                    if next_page_offset is None:
+                        break
+                except Exception as scroll_error:
+                    logger.error(f"Error scrolling through Qdrant collection: {scroll_error}")
                     break
                     
+            logger.debug(f"Retrieved {len(file_ids)} unique file IDs")
             return list(file_ids)
         except Exception as e:
+            logger.error(f"Error in get_all_ids: {e}")
             # Fallback: return empty list if we can't retrieve all IDs
             return []
         
     def get_filtered_ids(self, ids: list[str]) -> list[str]:
         # Return unique file_id fields filtered by provided ids
         try:
-            from qdrant_client import QdrantClient
             from qdrant_client.http.models import Filter, FieldCondition, MatchAny
             
             # Create a client to access the collection directly
+            logger.debug(f"Creating QdrantClient for get_filtered_ids with url={self.url}")
             client = QdrantClient(url=self.url, api_key=self.api_key)
+            logger.debug("QdrantClient created successfully for get_filtered_ids")
             
             # Create a client to access the collection directly
-            # client = QdrantClient(url=self.url, api_key=self.api_key)
             
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
@@ -149,42 +166,48 @@ class QdrantVector(Qdrant):
             next_page_offset = None
             
             while True:
-                response = client.scroll(
-                    collection_name=self.collection_name,
-                    limit=100,
-                    offset=next_page_offset,
-                    with_payload=True,
-                    scroll_filter=qdrant_filter
-                )
-                
-                # Extract file_id from each point's payload
-                for point in response[0]:
-                    if hasattr(point.payload, 'file_id'):
-                        file_ids.add(point.payload.file_id)
-                    elif isinstance(point.payload, dict) and 'file_id' in point.payload:
-                        file_ids.add(point.payload['file_id'])
-                
-                # Check if there are more points
-                next_page_offset = response[1]
-                if next_page_offset is None:
+                try:
+                    response = client.scroll(
+                        collection_name=self.collection_name,
+                        limit=100,
+                        offset=next_page_offset,
+                        with_payload=True,
+                        scroll_filter=qdrant_filter
+                    )
+                    
+                    # Extract file_id from each point's payload
+                    for point in response[0]:
+                        if hasattr(point.payload, 'file_id'):
+                            file_ids.add(point.payload.file_id)
+                        elif isinstance(point.payload, dict) and 'file_id' in point.payload:
+                            file_ids.add(point.payload['file_id'])
+                    
+                    # Check if there are more points
+                    next_page_offset = response[1]
+                    if next_page_offset is None:
+                        break
+                except Exception as scroll_error:
+                    logger.error(f"Error scrolling through Qdrant collection with filter: {scroll_error}")
                     break
                     
+            logger.debug(f"Retrieved {len(file_ids)} filtered file IDs")
             return list(file_ids)
         except Exception as e:
+            logger.error(f"Error in get_filtered_ids: {e}")
             # Fallback: return empty list if we can't retrieve filtered IDs
             return []
         
     def get_documents_by_ids(self, ids: list[str]) -> list[Document]:
         # Return documents filtered by file_id
         try:
-            from qdrant_client import QdrantClient
             from qdrant_client.http.models import Filter, FieldCondition, MatchAny
             
             # Create a client to access the collection directly
+            logger.debug(f"Creating QdrantClient for get_documents_by_ids with url={self.url}")
             client = QdrantClient(url=self.url, api_key=self.api_key)
+            logger.debug("QdrantClient created successfully for get_documents_by_ids")
             
             # Create a client to access the collection directly
-            # client = QdrantClient(url=self.url, api_key=self.api_key)
             
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
@@ -201,30 +224,36 @@ class QdrantVector(Qdrant):
             next_page_offset = None
             
             while True:
-                response = client.scroll(
-                    collection_name=self.collection_name,
-                    limit=100,
-                    offset=next_page_offset,
-                    with_payload=True,
-                    scroll_filter=qdrant_filter
-                )
-                
-                # Convert points to Documents
-                for point in response[0]:
-                    payload = point.payload
-                    if isinstance(payload, dict):
-                        # Extract content and metadata
-                        content = payload.get('page_content', '')
-                        metadata = {k: v for k, v in payload.items() if k != 'page_content'}
-                        documents.append(Document(page_content=content, metadata=metadata))
-                
-                # Check if there are more points
-                next_page_offset = response[1]
-                if next_page_offset is None:
+                try:
+                    response = client.scroll(
+                        collection_name=self.collection_name,
+                        limit=100,
+                        offset=next_page_offset,
+                        with_payload=True,
+                        scroll_filter=qdrant_filter
+                    )
+                    
+                    # Convert points to Documents
+                    for point in response[0]:
+                        payload = point.payload
+                        if isinstance(payload, dict):
+                            # Extract content and metadata
+                            content = payload.get('page_content', '')
+                            metadata = {k: v for k, v in payload.items() if k != 'page_content'}
+                            documents.append(Document(page_content=content, metadata=metadata))
+                    
+                    # Check if there are more points
+                    next_page_offset = response[1]
+                    if next_page_offset is None:
+                        break
+                except Exception as scroll_error:
+                    logger.error(f"Error scrolling through Qdrant collection for documents: {scroll_error}")
                     break
                     
+            logger.debug(f"Retrieved {len(documents)} documents")
             return documents
         except Exception as e:
+            logger.error(f"Error in get_documents_by_ids: {e}")
             # Fallback: return empty list if we can't retrieve documents
             return []
         
@@ -232,14 +261,14 @@ class QdrantVector(Qdrant):
         # Delete documents by file_id
         if ids is not None:
             try:
-                from qdrant_client import QdrantClient
                 from qdrant_client.http.models import Filter, FieldCondition, MatchAny
                 
                 # Create a client to access the collection directly
+                logger.debug(f"Creating QdrantClient for delete with url={self.url}")
                 client = QdrantClient(url=self.url, api_key=self.api_key)
+                logger.debug("QdrantClient created successfully for delete")
                 
                 # Create a client to access the collection directly
-                # client = QdrantClient(url=self.url, api_key=self.api_key)
                 
                 # Create a filter to find points with file_id in the provided list
                 qdrant_filter = Filter(
@@ -252,10 +281,15 @@ class QdrantVector(Qdrant):
                 )
                 
                 # Delete points matching the filter
-                client.delete(
-                    collection_name=self.collection_name,
-                    points_selector=qdrant_filter
-                )
+                try:
+                    client.delete(
+                        collection_name=self.collection_name,
+                        points_selector=qdrant_filter
+                    )
+                    logger.debug(f"Successfully deleted documents with file_ids: {ids}")
+                except Exception as delete_error:
+                    logger.error(f"Error deleting documents from Qdrant: {delete_error}")
             except Exception as e:
+                logger.error(f"Error in delete method: {e}")
                 # Log the error but don't raise it to maintain consistency with other implementations
                 pass

@@ -13,10 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: Install uv
         run: |
@@ -39,7 +39,7 @@ jobs:
         env:
           OPENAI_API_KEY: test_key
         run: |
-          pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml
+          python -m pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
