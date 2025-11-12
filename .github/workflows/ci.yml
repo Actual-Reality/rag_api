@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --locked
+          uv sync --locked --group dev
 
       - name: Run tests and generate report
         env:

@@ -3,15 +3,26 @@ from typing import Any, List, Optional, Tuple
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_qdrant import Qdrant
+from qdrant_client import QdrantClient
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class QdrantVector(Qdrant):
     def __init__(self, url: str, api_key: Optional[str], collection_name: str,
                  embeddings: Embeddings):
+        # Log the initialization parameters
+        logger.debug(f"QdrantVector.__init__ called with url={url}, api_key={api_key}, collection_name={collection_name}")
+        
+        # Create a QdrantClient instance
+        client = QdrantClient(url=url, api_key=api_key)
+        
         # Initialize Qdrant client and connection
         super().__init__(
-            url=url,
-            api_key=api_key,
+            client=client,
             collection_name=collection_name,
             embeddings=embeddings
         )
@@ -19,6 +30,9 @@ class QdrantVector(Qdrant):
         self.url = url
         self.api_key = api_key
         self.collection_name = collection_name
+        
+        # Log successful initialization
+        logger.debug("QdrantVector initialized successfully")
         
     def add_documents(self, docs: list[Document], ids: list[str]):
         # Add documents with custom IDs
@@ -76,6 +90,9 @@ class QdrantVector(Qdrant):
             # Create a client to access the collection directly
             client = QdrantClient(url=self.url, api_key=self.api_key)
             
+            # Create a client to access the collection directly
+            # client = QdrantClient(url=self.url, api_key=self.api_key)
+            
             # Scroll through all points to get unique file_ids
             file_ids = set()
             next_page_offset = None
@@ -113,6 +130,9 @@ class QdrantVector(Qdrant):
             
             # Create a client to access the collection directly
             client = QdrantClient(url=self.url, api_key=self.api_key)
+            
+            # Create a client to access the collection directly
+            # client = QdrantClient(url=self.url, api_key=self.api_key)
             
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
@@ -162,6 +182,9 @@ class QdrantVector(Qdrant):
             
             # Create a client to access the collection directly
             client = QdrantClient(url=self.url, api_key=self.api_key)
+            
+            # Create a client to access the collection directly
+            # client = QdrantClient(url=self.url, api_key=self.api_key)
             
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
@@ -214,6 +237,9 @@ class QdrantVector(Qdrant):
                 
                 # Create a client to access the collection directly
                 client = QdrantClient(url=self.url, api_key=self.api_key)
+                
+                # Create a client to access the collection directly
+                # client = QdrantClient(url=self.url, api_key=self.api_key)
                 
                 # Create a filter to find points with file_id in the provided list
                 qdrant_filter = Filter(
