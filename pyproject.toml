@@ -178,6 +178,7 @@ dependencies = [
     "xlsxwriter==3.2.9",
     "yarl==1.22.0",
     "zstandard==0.23.0",
+    "uvicorn>=0.38.0",
 ]
 
 [build-system]
