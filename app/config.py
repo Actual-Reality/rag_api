@@ -234,7 +234,9 @@ def init_embeddings(provider, model):
         from langchain_huggingface import HuggingFaceEmbeddings
 
         return HuggingFaceEmbeddings(
-            model_name=model, encode_kwargs={"normalize_embeddings": True}
+            model_name=model,
+            encode_kwargs={"normalize_embeddings": True},
+            model_kwargs={"trust_remote_code": True},
         )
     elif provider == EmbeddingsProvider.HUGGINGFACETEI:
         from langchain_huggingface import HuggingFaceEndpointEmbeddings

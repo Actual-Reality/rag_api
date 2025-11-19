@@ -34,12 +34,13 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync --locked --group dev
+          uv run pytest --version
 
       - name: Run tests and generate report
         env:
           OPENAI_API_KEY: test_key
         run: |
-          python -m pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml
+          uv run pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
