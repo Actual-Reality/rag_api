@@ -14,12 +14,17 @@ class TestQdrantVector(unittest.TestCase):
         
         # Create a QdrantVector instance with mock parameters
         with patch('app.services.vector_store.qdrant_vector.Qdrant.__init__', return_value=None):
-            self.qdrant_vector = QdrantVector(
-                url="http://localhost:6333",
-                api_key=None,
-                collection_name="test_collection",
-                embeddings=self.mock_embeddings
-            )
+            # We also need to patch QdrantClient here because __init__ calls it
+            with patch('app.services.vector_store.qdrant_vector.QdrantClient') as mock_qdrant_client:
+                self.mock_client_instance = MagicMock()
+                mock_qdrant_client.return_value = self.mock_client_instance
+                
+                self.qdrant_vector = QdrantVector(
+                    url="http://localhost:6333",
+                    api_key=None,
+                    collection_name="test_collection",
+                    embeddings=self.mock_embeddings
+                )
             
     @patch('app.services.vector_store.qdrant_vector.Qdrant.add_documents')
     def test_add_documents(self, mock_add_documents):
@@ -59,16 +64,13 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(result[0][1], 0.8)  # score
         mock_similarity_search.assert_called_once()
         
-    @patch('qdrant_client.QdrantClient')
-    def test_get_all_ids(self, mock_qdrant_client):
+    def test_get_all_ids(self):
         """Test get_all_ids method."""
-        # Mock the Qdrant client response
-        mock_client_instance = MagicMock()
-        mock_client_instance.scroll.return_value = (
+        # Mock the Qdrant client response on the instance
+        self.mock_client_instance.scroll.return_value = (
             [MagicMock(payload={"file_id": "test_id_1"}), MagicMock(payload={"file_id": "test_id_2"})],
             None  # No next page
         )
-        mock_qdrant_client.return_value = mock_client_instance
         
         # Call the method
         result = self.qdrant_vector.get_all_ids()
@@ -77,17 +79,15 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertIn("test_id_1", result)
         self.assertIn("test_id_2", result)
+        self.mock_client_instance.scroll.assert_called()
         
-    @patch('qdrant_client.QdrantClient')
-    def test_get_filtered_ids(self, mock_qdrant_client):
+    def test_get_filtered_ids(self):
         """Test get_filtered_ids method."""
-        # Mock the Qdrant client response
-        mock_client_instance = MagicMock()
-        mock_client_instance.scroll.return_value = (
+        # Mock the Qdrant client response on the instance
+        self.mock_client_instance.scroll.return_value = (
             [MagicMock(payload={"file_id": "filtered_id_1"})],
             None  # No next page
         )
-        mock_qdrant_client.return_value = mock_client_instance
         
         # Call the method
         result = self.qdrant_vector.get_filtered_ids(["filtered_id_1", "filtered_id_2"])
@@ -95,19 +95,17 @@ class TestQdrantVector(unittest.TestCase):
         # Assertions
         self.assertEqual(len(result), 1)
         self.assertIn("filtered_id_1", result)
+        self.mock_client_instance.scroll.assert_called()
         
-    @patch('qdrant_client.QdrantClient')
-    def test_get_documents_by_ids(self, mock_qdrant_client):
+    def test_get_documents_by_ids(self):
         """Test get_documents_by_ids method."""
-        # Mock the Qdrant client response
-        mock_client_instance = MagicMock()
+        # Mock the Qdrant client response on the instance
         mock_point = MagicMock()
         mock_point.payload = {"page_content": "Test content", "source": "test", "file_id": "doc_id_1"}
-        mock_client_instance.scroll.return_value = (
+        self.mock_client_instance.scroll.return_value = (
             [mock_point],
             None  # No next page
         )
-        mock_qdrant_client.return_value = mock_client_instance
         
         # Call the method
         result = self.qdrant_vector.get_documents_by_ids(["doc_id_1"])
@@ -116,19 +114,15 @@ class TestQdrantVector(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].page_content, "Test content")
         self.assertEqual(result[0].metadata["source"], "test")
+        self.mock_client_instance.scroll.assert_called()
         
-    @patch('qdrant_client.QdrantClient')
-    def test_delete(self, mock_qdrant_client):
+    def test_delete(self):
         """Test delete method."""
-        # Mock the Qdrant client
-        mock_client_instance = MagicMock()
-        mock_qdrant_client.return_value = mock_client_instance
-        
         # Call the method
         self.qdrant_vector.delete(["delete_id_1", "delete_id_2"])
         
         # Assertions
-        mock_client_instance.delete.assert_called_once()
+        self.mock_client_instance.delete.assert_called_once()
 
 
 if __name__ == '__main__':

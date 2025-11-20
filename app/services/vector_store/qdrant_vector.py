@@ -37,10 +37,12 @@ class QdrantVector(Qdrant):
             logger.error(f"Failed to initialize Qdrant parent class: {e}")
             raise
             
-        # Store attributes for use in methods that create their own QdrantClient
+        # Store attributes
         self.url = url
         self.api_key = api_key
         self.collection_name = collection_name
+        # Store the client explicitly for our custom methods
+        self.client = client
         
         # Log successful initialization
         logger.debug("QdrantVector initialized successfully")
@@ -94,23 +96,13 @@ class QdrantVector(Qdrant):
         # Return all unique file_id fields
         # In Qdrant, we need to scroll through all points and extract file_id
         try:
-            # Get all points from the collection
-            from qdrant_client.http.models import Filter, FieldCondition, MatchAny
-            
-            # Create a client to access the collection directly
-            logger.debug(f"Creating QdrantClient for get_all_ids with url={self.url}")
-            client = QdrantClient(url=self.url, api_key=self.api_key)
-            logger.debug("QdrantClient created successfully for get_all_ids")
-            
-            # Create a client to access the collection directly
-            
             # Scroll through all points to get unique file_ids
             file_ids = set()
             next_page_offset = None
             
             while True:
                 try:
-                    response = client.scroll(
+                    response = self.client.scroll(
                         collection_name=self.collection_name,
                         limit=100,
                         offset=next_page_offset,
@@ -144,13 +136,6 @@ class QdrantVector(Qdrant):
         try:
             from qdrant_client.http.models import Filter, FieldCondition, MatchAny
             
-            # Create a client to access the collection directly
-            logger.debug(f"Creating QdrantClient for get_filtered_ids with url={self.url}")
-            client = QdrantClient(url=self.url, api_key=self.api_key)
-            logger.debug("QdrantClient created successfully for get_filtered_ids")
-            
-            # Create a client to access the collection directly
-            
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
                 must=[
@@ -167,7 +152,7 @@ class QdrantVector(Qdrant):
             
             while True:
                 try:
-                    response = client.scroll(
+                    response = self.client.scroll(
                         collection_name=self.collection_name,
                         limit=100,
                         offset=next_page_offset,
@@ -202,13 +187,6 @@ class QdrantVector(Qdrant):
         try:
             from qdrant_client.http.models import Filter, FieldCondition, MatchAny
             
-            # Create a client to access the collection directly
-            logger.debug(f"Creating QdrantClient for get_documents_by_ids with url={self.url}")
-            client = QdrantClient(url=self.url, api_key=self.api_key)
-            logger.debug("QdrantClient created successfully for get_documents_by_ids")
-            
-            # Create a client to access the collection directly
-            
             # Create a filter to find points with file_id in the provided list
             qdrant_filter = Filter(
                 must=[
@@ -225,7 +203,7 @@ class QdrantVector(Qdrant):
             
             while True:
                 try:
-                    response = client.scroll(
+                    response = self.client.scroll(
                         collection_name=self.collection_name,
                         limit=100,
                         offset=next_page_offset,
@@ -263,13 +241,6 @@ class QdrantVector(Qdrant):
             try:
                 from qdrant_client.http.models import Filter, FieldCondition, MatchAny
                 
-                # Create a client to access the collection directly
-                logger.debug(f"Creating QdrantClient for delete with url={self.url}")
-                client = QdrantClient(url=self.url, api_key=self.api_key)
-                logger.debug("QdrantClient created successfully for delete")
-                
-                # Create a client to access the collection directly
-                
                 # Create a filter to find points with file_id in the provided list
                 qdrant_filter = Filter(
                     must=[
@@ -282,7 +253,7 @@ class QdrantVector(Qdrant):
                 
                 # Delete points matching the filter
                 try:
-                    client.delete(
+                    self.client.delete(
                         collection_name=self.collection_name,
                         points_selector=qdrant_filter
                     )
