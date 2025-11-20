@@ -326,7 +326,12 @@ embeddings = init_embeddings(EMBEDDINGS_PROVIDER, EMBEDDINGS_MODEL)
 logger.info(f"Initialized embeddings of type: {type(embeddings)}")
 
 # Vector store
-if VECTOR_DB_TYPE == VectorDBType.PGVECTOR:
+if os.getenv("MOCK_DB", "False").lower() == "true":
+    from unittest.mock import MagicMock
+
+    vector_store = MagicMock()
+    logger.info("Initialized mocked vector store")
+elif VECTOR_DB_TYPE == VectorDBType.PGVECTOR:
     vector_store = get_vector_store(
         connection_string=CONNECTION_STRING,
         embeddings=embeddings,

@@ -39,6 +39,7 @@ jobs:
       - name: Run tests and generate report
         env:
           OPENAI_API_KEY: test_key
+          MOCK_DB: true
         run: |
           uv run pytest --maxfail=1 --disable-warnings --junitxml=test-results.xml
 
